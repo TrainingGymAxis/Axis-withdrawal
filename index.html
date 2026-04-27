@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrainingGymAxis 退会手続き</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 20px; background-color: #f4f4f4; color: #333; line-height: 1.6; }
+        .container { background: #fff; padding: 25px 20px; border-radius: 15px; max-width: 450px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        h2 { font-size: 18px; text-align: center; color: #00b900; border-bottom: 3px solid #00b900; padding-bottom: 12px; margin-bottom: 25px; margin-top: 0; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; background-color: #fafafa; }
+        
+        .rule-box { background: #fff0f0; padding: 18px; border-radius: 10px; border: 1px solid #ffcccc; margin-top: 20px; margin-bottom: 10px; }
+        .rule-title { color: #d00; font-weight: bold; font-size: 15px; margin-bottom: 10px; display: block; text-align: center; }
+        
+        /* スケジュール表の強化 */
+        .schedule-table { width: 100%; background: white; border-collapse: collapse; border-radius: 8px; overflow: hidden; margin-bottom: 15px; font-size: 13px; }
+        .schedule-table th, .schedule-table td { border: 1px solid #ffcccc; padding: 10px; text-align: left; }
+        .schedule-table th { background: #ffebeb; width: 45%; }
+        .highlight-date { color: #d00; font-weight: bold; font-size: 14px; }
+
+        .rule-item { display: flex; align-items: flex-start; margin-bottom: 15px; font-size: 13px; cursor: pointer; }
+        .rule-item input { width: 22px; height: 22px; margin-right: 10px; flex-shrink: 0; }
+        
+        .btn { background-color: #00b900; color: white; border: none; padding: 18px; width: 100%; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn:disabled { background-color: #ccc !important; cursor: not-allowed; opacity: 0.6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>【退会連絡フォーム】</h2>
+    
+    <div class="form-group">
+        <label>① ご入会店舗名</label>
+        <select id="shop" onchange="validateForm()">
+            <option value="">店舗を選択してください</option>
+            <option>飯田店</option><option>有玉店</option><option>葵東店</option>
+            <option>中条店</option><option>平口店</option><option>竜洋店</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>② お名前</label>
+        <input type="text" id="name" placeholder="氏名を入力" oninput="validateForm()">
+    </div>
+
+    <div class="form-group">
+        <label>③ 会員番号</label>
+        <input type="number" id="memberId" placeholder="会員番号（数字のみ）" oninput="validateForm()">
+        <p style="font-size:11px; color:#d00; margin-top:5px; font-weight:bold;">※カード照合に必須です。必ずご入力ください。</p>
+    </div>
+
+    <div class="rule-box">
+        <span class="rule-title">【重要：退会・返却スケジュール】</span>
+        <p style="font-size: 11px; color: #444; margin-bottom: 10px; text-align: center;">
+            規約に基づき、退会連絡および会員証返却の<br>締め日は<b>毎月10日</b>となっております。
+        </p>
+        
+        <table class="schedule-table">
+            <tr>
+                <th>本日（申請日）</th>
+                <td id="todayStr"></td>
+            </tr>
+            <tr>
+                <th>会員証返却</th>
+                <td id="returnLimit" class="highlight-date"></td>
+            </tr>
+            <tr>
+                <th>退会受理日</th>
+                <td id="receiptDate" class="highlight-date"></td>
+            </tr>
+            <tr>
+                <th>最終利用日</th>
+                <td id="limitDate" class="highlight-date"></td>
+            </tr>
+        </table>
+
+        <label class="rule-item">
+            <input type="checkbox" id="check1" onchange="validateForm()">
+            <span>上記の返却期限および退会スケジュールを承諾しました。</span>
+        </label>
+
+        <label class="rule-item">
+            <input type="checkbox" id="check2" onchange="validateForm()">
+            <span>会員証を期限までに店舗の「返却用ポスト」へ投函します。</span>
+        </label>
+    </div>
+    
+    <button id="submitBtn" class="btn" onclick="sendData()" disabled>退会内容を送信する</button>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+    const LIFF_ID = "2009898612-8KMHBJAg"; 
+
+    liff.init({ liffId: LIFF_ID }).then(() => {
+        if (!liff.isLoggedIn()) { liff.login(); }
+        validateForm(); 
+    }).catch((err) => { console.error(err); });
+
+    let g_returnDate = "";
+    let g_receiptDate = "";
+    let g_limitDate = "";
+
+    function calculateSchedule() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        
+        document.getElementById('todayStr').innerText = `${year}年${month}月${day}日`;
+
+        let targetMonth, targetYear;
+
+        if (day <= 10) {
+            // 10日以前：今月10日が返却期限、今月末まで利用
+            targetMonth = month;
+            targetYear = year;
+        } else {
+            // 11日以降：来月10日が返却期限、来月末まで利用
+            targetMonth = month + 1;
+            targetYear = year;
+            if (targetMonth > 12) { targetMonth -= 12; targetYear += 1; }
+        }
+
+        const lastDay = new Date(targetYear, targetMonth, 0).getDate();
+
+        g_returnDate = `${targetMonth}月10日まで`;
+        g_receiptDate = `${targetMonth}月10日付`;
+        g_limitDate = `${targetMonth}月${lastDay}日`;
+
+        document.getElementById('returnLimit').innerText = g_returnDate;
+        document.getElementById('receiptDate').innerText = g_receiptDate;
+        document.getElementById('limitDate').innerText = g_limitDate;
+    }
+
+    window.onload = calculateSchedule;
+
+    function validateForm() {
+        const shop = document.getElementById('shop').value;
+        const name = document.getElementById('name').value.trim();
+        const memberId = document.getElementById('memberId').value.trim();
+        const c1 = document.getElementById('check1').checked;
+        const c2 = document.getElementById('check2').checked;
+        document.getElementById('submitBtn').disabled = !(shop && name && memberId && c1 && c2);
+    }
+
+    function sendData() {
+        const msg = "【AXIS-WITHDRAWAL-SUBMIT】\n" +
+            "■店舗：" + document.getElementById('shop').value + "\n" +
+            "■名前：" + document.getElementById('name').value + "様\n" +
+            "■番号：" + document.getElementById('memberId').value + "\n" +
+            "■返却期限：" + g_returnDate + "\n" +
+            "■受理日：" + g_receiptDate + "\n" +
+            "■最終利用：" + g_limitDate + "\n" +
+            "■規約：返却ルール承諾済み";
+
+        liff.sendMessages([{ type: 'text', text: msg }]).then(() => {
+            liff.closeWindow();
+        }).catch((err) => { alert("送信失敗"); });
+    }
+</script>
+</body>
+</html>
