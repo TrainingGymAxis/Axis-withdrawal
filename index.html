@@ -15,7 +15,6 @@
         .rule-box { background: #fff0f0; padding: 18px; border-radius: 10px; border: 1px solid #ffcccc; margin-top: 20px; margin-bottom: 10px; }
         .rule-title { color: #d00; font-weight: bold; font-size: 15px; margin-bottom: 10px; display: block; text-align: center; }
         
-        /* スケジュール表の強化 */
         .schedule-table { width: 100%; background: white; border-collapse: collapse; border-radius: 8px; overflow: hidden; margin-bottom: 15px; font-size: 13px; }
         .schedule-table th, .schedule-table td { border: 1px solid #ffcccc; padding: 10px; text-align: left; }
         .schedule-table th { background: #ffebeb; width: 45%; }
@@ -50,13 +49,13 @@
     <div class="form-group">
         <label>③ 会員番号</label>
         <input type="number" id="memberId" placeholder="会員番号（数字のみ）" oninput="validateForm()">
-        <p style="font-size:11px; color:#d00; margin-top:5px; font-weight:bold;">※カード照合に必須です。必ずご入力ください。</p>
+        <p style="font-size:11px; color:#d00; margin-top:5px; font-weight:bold;">※本人確認とカード照合に必須です。</p>
     </div>
 
     <div class="rule-box">
         <span class="rule-title">【重要：退会・返却スケジュール】</span>
         <p style="font-size: 11px; color: #444; margin-bottom: 10px; text-align: center;">
-            規約に基づき、退会連絡および会員証返却の<br>締め日は<b>毎月10日</b>となっております。
+            入会時の規約の通り、退会連絡および会員証返却の<br>締め日は<b>毎月10日</b>となっております。
         </p>
         
         <table class="schedule-table">
@@ -65,7 +64,7 @@
                 <td id="todayStr"></td>
             </tr>
             <tr>
-                <th>会員証返却</th>
+                <th>会員証返却期限</th>
                 <td id="returnLimit" class="highlight-date"></td>
             </tr>
             <tr>
@@ -73,19 +72,19 @@
                 <td id="receiptDate" class="highlight-date"></td>
             </tr>
             <tr>
-                <th>最終利用日</th>
+                <th>最終利用可能日</th>
                 <td id="limitDate" class="highlight-date"></td>
             </tr>
         </table>
 
         <label class="rule-item">
             <input type="checkbox" id="check1" onchange="validateForm()">
-            <span>上記の返却期限および退会スケジュールを承諾しました。</span>
+            <span>上記のスケジュールを承諾しました。10日を過ぎた場合、次回の決済停止が間に合わないことを理解しています。</span>
         </label>
 
         <label class="rule-item">
             <input type="checkbox" id="check2" onchange="validateForm()">
-            <span>会員証を期限までに店舗の「返却用ポスト」へ投函します。</span>
+            <span>会員証を上記期限までに店舗の「返却用ポスト」へ投函します。未返却の場合、受理が遅れることに同意します。</span>
         </label>
     </div>
     
@@ -94,7 +93,8 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-    const LIFF_ID = "2009898612-8KMHBJAg"; 
+    // 退会フォーム専用の新しいLIFF IDをセット済み
+    const LIFF_ID = "2009898612-mOCtiUWT"; 
 
     liff.init({ liffId: LIFF_ID }).then(() => {
         if (!liff.isLoggedIn()) { liff.login(); }
@@ -115,12 +115,11 @@
 
         let targetMonth, targetYear;
 
+        // 10日締めルール：11日以降は翌月扱い
         if (day <= 10) {
-            // 10日以前：今月10日が返却期限、今月末まで利用
             targetMonth = month;
             targetYear = year;
         } else {
-            // 11日以降：来月10日が返却期限、来月末まで利用
             targetMonth = month + 1;
             targetYear = year;
             if (targetMonth > 12) { targetMonth -= 12; targetYear += 1; }
@@ -156,11 +155,11 @@
             "■返却期限：" + g_returnDate + "\n" +
             "■受理日：" + g_receiptDate + "\n" +
             "■最終利用：" + g_limitDate + "\n" +
-            "■規約：返却ルール承諾済み";
+            "■規約：10日締め・返却ルール承諾済み";
 
         liff.sendMessages([{ type: 'text', text: msg }]).then(() => {
             liff.closeWindow();
-        }).catch((err) => { alert("送信失敗"); });
+        }).catch((err) => { alert("LINEアプリから送信してください。"); });
     }
 </script>
 </body>
