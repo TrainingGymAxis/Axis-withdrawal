@@ -148,14 +148,14 @@
     }
 
     function sendData() {
-        const msg = "【AXIS-WITHDRAWAL-SUBMIT】\n" +
+        const msg = "【退会連絡】\n" +
             "■店舗：" + document.getElementById('shop').value + "\n" +
             "■名前：" + document.getElementById('name').value + "様\n" +
             "■番号：" + document.getElementById('memberId').value + "\n" +
-            "■返却期限：" + g_returnDate + "\n" +
-            "■受理日：" + g_receiptDate + "\n" +
-            "■最終利用：" + g_limitDate + "\n" +
-            "■規約：10日締め・返却ルール承諾済み";
+            "■会員証返却期限：" + g_returnDate + "\n" +
+            "■退会受理予定日：" + g_receiptDate + "\n" +
+            "■最終利用可能日：" + g_limitDate + "\n" +
+            "■規約：10日締めと会員証返却承諾済み";
 
         liff.sendMessages([{ type: 'text', text: msg }]).then(() => {
             liff.closeWindow();
