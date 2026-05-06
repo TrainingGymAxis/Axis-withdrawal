@@ -10,7 +10,8 @@
         h2 { font-size: 18px; text-align: center; color: #00b900; border-bottom: 3px solid #00b900; padding-bottom: 12px; margin-bottom: 25px; margin-top: 0; }
         .form-group { margin-bottom: 18px; }
         label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; background-color: #fafafa; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; background-color: #fafafa; }
+        textarea { resize: vertical; min-height: 80px; font-family: inherit; }
         
         .rule-box { background: #fff0f0; padding: 18px; border-radius: 10px; border: 1px solid #ffcccc; margin-top: 20px; margin-bottom: 10px; }
         .rule-title { color: #d00; font-weight: bold; font-size: 15px; margin-bottom: 10px; display: block; text-align: center; }
@@ -36,8 +37,13 @@
         <label>① ご入会店舗名</label>
         <select id="shop" onchange="validateForm()">
             <option value="">店舗を選択してください</option>
-            <option>飯田店</option><option>有玉店</option><option>葵東店</option>
-            <option>中条店</option><option>平口店</option><option>竜洋店</option>
+            <option>飯田店</option>
+            <option>有玉店</option>
+            <option>葵東店</option>
+            <option>中条店</option>
+            <option>平口店</option>
+            <option>竜洋店</option>
+            <option>その他</option>
         </select>
     </div>
 
@@ -50,6 +56,11 @@
         <label>③ 会員番号</label>
         <input type="number" id="memberId" placeholder="会員番号（数字のみ）" oninput="validateForm()">
         <p style="font-size:11px; color:#d00; margin-top:5px; font-weight:bold;">※本人確認とカード照合に必須です。</p>
+    </div>
+
+    <div class="form-group">
+        <label>④ 備考欄（任意）</label>
+        <textarea id="notes" placeholder="家族で入会している場合はご記入ください" oninput="validateForm()"></textarea>
     </div>
 
     <div class="rule-box">
@@ -73,14 +84,16 @@
                 <td id="limitDate" class="highlight-date"></td>
             </tr>
         </table>
-<div style="background: #eef9ff; padding: 10px; border-radius: 8px; border: 1px solid #b3e5fc; margin-bottom: 15px;">
-    <p style="font-size: 13px; margin: 0; color: #0277bd; text-align: center; font-weight: bold;">
-        💡 最終利用可能日まで開錠します。
-    </p>
-    <p style="font-size: 11px; margin: 5px 0 0 0; color: #555; line-height: 1.4;">
-        <b>会員番号</b>を覚えておいていただければ、会員証返却後も期限まではご活用いただけます。
-    </p>
-</div>
+        
+        <div style="background: #eef9ff; padding: 10px; border-radius: 8px; border: 1px solid #b3e5fc; margin-bottom: 15px;">
+            <p style="font-size: 13px; margin: 0; color: #0277bd; text-align: center; font-weight: bold;">
+                💡 最終利用可能日まで開錠します。
+            </p>
+            <p style="font-size: 11px; margin: 5px 0 0 0; color: #555; line-height: 1.4;">
+                <b>会員番号</b>を覚えておいていただければ、会員証返却後も期限まではご活用いただけます。
+            </p>
+        </div>
+        
         <label class="rule-item">
             <input type="checkbox" id="check1" onchange="validateForm()">
             <span>退会連絡および会員証返却の締日は規約に記載のとおり毎月10日です。（※過ぎた場合は翌月扱いとなります）</span>
@@ -97,7 +110,6 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-    // 退会フォーム専用の新しいLIFF IDをセット済み
     const LIFF_ID = "2009898612-mOCtiUWT"; 
 
     liff.init({ liffId: LIFF_ID }).then(() => {
@@ -119,7 +131,6 @@
 
         let targetMonth, targetYear;
 
-        // 10日締めルール：11日以降は翌月扱い
         if (day <= 10) {
             targetMonth = month;
             targetYear = year;
@@ -152,10 +163,12 @@
     }
 
     function sendData() {
+        const notes = document.getElementById('notes').value.trim() || "なし";
         const msg = "【退会連絡】\n" +
             "■店舗：" + document.getElementById('shop').value + "\n" +
             "■名前：" + document.getElementById('name').value + "様\n" +
             "■番号：" + document.getElementById('memberId').value + "\n" +
+            "■備考：" + notes + "\n" +
             "■会員証返却期限：" + g_returnDate + "\n" +
             "■退会受理予定日：" + g_receiptDate + "\n" +
             "■最終利用可能日：" + g_limitDate + "\n" +
@@ -167,5 +180,4 @@
     }
 </script>
 </body>
-</html>
 </html>
